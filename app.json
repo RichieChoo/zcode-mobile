@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "ZCode",
+    "slug": "zcode-mobile",
+    "version": "0.1.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "scheme": "zcode",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0B0F14",
+      "resizeMode": "contain",
+      "image": "./assets/splash-icon.png"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ai.z.zcode.mobile",
+      "icon": "./assets/icon.png",
+      "splash": {
+        "backgroundColor": "#0B0F14",
+        "resizeMode": "contain",
+        "image": "./assets/splash-icon.png"
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "ZCode 需要使用相机扫描桌面端生成的二维码以建立远程连接。",
+        "UIApplicationSceneManifest": {
+          "UIApplicationSupportsMultipleScenes": false
+        },
+        "UILaunchScreen": {
+          "UIColorName": "SplashScreenBackground"
+        }
+      }
+    },
+    "android": {
+      "package": "ai.z.zcode.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B0F14"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.VIBRATE"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "ZCode 需要使用相机扫描桌面端生成的二维码以建立远程连接。",
+          "recordAudioAndroid": false
+        }
+      ],
+      "expo-screen-orientation"
+    ],
+    "experiments": {
+      "typedRoutes": "src"
+    }
+  }
+}
