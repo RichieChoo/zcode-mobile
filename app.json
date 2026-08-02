@@ -59,10 +59,20 @@
           "recordAudioAndroid": false
         }
       ],
-      "expo-screen-orientation"
+      "expo-screen-orientation",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "ndkVersion": "27.1.12297006",
+            "kotlinVersion": "1.9.25"
+          }
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
-      "typedRoutes": "src"
+      "typedRoutes": true
     }
   }
 }

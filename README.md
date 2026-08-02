@@ -48,7 +48,7 @@ src/
 
 ## 本地开发
 
-前置：Node 18+、Android Studio（含 Android SDK）或已配置好的 Android 开发环境。
+前置：Node 18+、**JDK 17**（RN 0.76 / AGP 8.x 要求）、Android SDK（含 NDK 27+）、已配置好 adb 的 Android 开发环境。
 
 ```bash
 # 安装依赖
@@ -63,6 +63,30 @@ npm run android
 # 或用 Expo Go 开发（热重载）
 npm start
 ```
+
+### 构建注意事项（踩坑记录）
+
+- **JDK 必须 17**：`JAVA_HOME` 指向 JDK 17，`expo run:android` 会因 AGP 8.x 在 JDK 11 下失败。
+- **NDK 版本**：`app.json` 已通过 `expo-build-properties` 固化 `ndkVersion=27.1.12297006`（本机已安装该版本）。若用其他版本需先 `sdkmanager --install "ndk;<版本>"`。
+- **Kotlin 版本**：固化 `kotlinVersion=1.9.25`，解决 expo-modules-core 的 Compose Compiler 1.5.15 与 Kotlin 1.9.24 的版本冲突。
+- **support 库冲突**：expo-camera → cameraview 依赖古 `com.android.support:25.3.1`，与 androidx 冲突。`expo prebuild` 后需在 `android/build.gradle` 的 `allprojects` 里加如下排除（见 `git log` 中 "fix: android build" 提交）：
+
+```gradle
+allprojects {
+    configurations.configureEach {
+        exclude group: 'com.android.support', module: 'support-v4'
+        exclude group: 'com.android.support', module: 'support-compat'
+        exclude group: 'com.android.support', module: 'support-media-compat'
+        exclude group: 'com.android.support', module: 'support-core-utils'
+        exclude group: 'com.android.support', module: 'support-core-ui'
+        exclude group: 'com.android.support', module: 'support-fragment'
+        exclude group: 'com.android.support', module: 'support-annotations'
+        exclude group: 'com.android.support', module: 'appcompat-v7'
+    }
+}
+```
+
+- **adb 版本冲突**：本机曾同时存在 adb 36（brew cask）与 adb 37（commandlinetools），导致 daemon 反复被杀。已删除 `/opt/homebrew/bin/adb` 软链，全系统统一 adb 37。若再遇到 `daemon not running` 反复出现，检查 `which -a adb` 是否只有一个版本。
 
 > 相机权限：首次进入扫码页会请求相机权限，授予后即可扫描桌面端 ZCode 的「连接手机」二维码。
 
