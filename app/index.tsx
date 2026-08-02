@@ -10,6 +10,8 @@ import {
   dispatchRefreshMessage,
 } from "../src/components/WebToolbar";
 import { selectActiveSession, useAppStore } from "../src/store/appStore";
+import { mockRemote, isMockEnabled } from "../src/lib/mockConfig";
+import { makeId } from "../src/lib/id";
 import type { RefreshMessage } from "../src/lib/zcodeRefresh";
 
 /**
@@ -18,13 +20,27 @@ import type { RefreshMessage } from "../src/lib/zcodeRefresh";
  */
 export default function HomeScreen() {
   const session = useAppStore(selectActiveSession);
-  const setActive = useAppStore((s) => s.setActive);
+  const addSession = useAppStore((s) => s.addSession);
 
   if (!session) {
     return (
       <EmptyState
         onScan={() => router.push("/scan")}
         onManual={() => router.push({ pathname: "/scan", params: { manual: "1" } })}
+        onMock={
+          isMockEnabled && mockRemote
+            ? () => {
+                // 本地开发模式：直接用 mock 链接创建会话并进入 WebView。
+                const m = mockRemote!;
+                addSession({
+                  id: makeId(),
+                  name: m.name ?? "Mock 会话",
+                  url: m.url,
+                  boundAt: Date.now(),
+                });
+              }
+            : undefined
+        }
       />
     );
   }
@@ -55,6 +71,17 @@ function ZCodeWebView({ url, title }: { url: string; title: string }) {
     setCanGoForward(nav.canGoForward);
   };
 
+  // 诊断日志：确认 WebView 加载链路（URL、加载结果、错误）。开发期保留。
+  const onLoadStart = (e: { nativeEvent: { url: string } }) => {
+    console.log("[WebView] loadStart:", e.nativeEvent.url);
+  };
+  const onLoadEnd = (e: { nativeEvent: { url: string } }) => {
+    console.log("[WebView] loadEnd:", e.nativeEvent.url);
+  };
+  const onWebError = (e: { nativeEvent: { url: string; description: string; code?: number } }) => {
+    console.log("[WebView] loadError:", e.nativeEvent.url, e.nativeEvent.description, e.nativeEvent.code);
+  };
+
   const onShare = async () => {
     try {
       await Share.share({ message: url, url });
@@ -83,6 +110,10 @@ function ZCodeWebView({ url, title }: { url: string; title: string }) {
         source={{ uri: url }}
         onMessage={onMessage}
         onNavigationStateChange={onNavStateChange}
+        onLoadStart={onLoadStart}
+        onLoadEnd={onLoadEnd}
+        onError={onWebError}
+        onHttpError={onWebError}
         javaScriptEnabled
         domStorageEnabled
         startInLoadingState

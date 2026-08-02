@@ -9,10 +9,12 @@ interface Props {
   onScan: () => void;
   /** 点击「手动输入 URL」次按钮（可选）。 */
   onManual?: () => void;
+  /** 点击「Mock 链接」按钮（本地开发模式，可选）。 */
+  onMock?: () => void;
 }
 
-/** 首启动空状态：引导用户扫码绑定桌面端 ZCode。 */
-export function EmptyState({ onScan, onManual }: Props) {
+/** 首启动空状态：引导用户扫码绑定桌面端 ZCode；开发模式下额外提供 Mock 入口。 */
+export function EmptyState({ onScan, onManual, onMock }: Props) {
   const theme = useTheme();
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.colors.background }]}>
@@ -44,6 +46,19 @@ export function EmptyState({ onScan, onManual }: Props) {
             手动输入链接
           </Button>
         ) : null}
+
+        {onMock ? (
+          <Button
+            mode="outlined"
+            icon={({ size, color }) => (
+              <MaterialCommunityIcons name="flask-outline" size={size} color={color} />
+            )}
+            onPress={onMock}
+            style={styles.mockBtn}
+          >
+            使用 Mock 链接进入
+          </Button>
+        ) : null}
       </View>
     </SafeAreaView>
   );
@@ -64,4 +79,5 @@ const styles = StyleSheet.create({
   hint: { textAlign: "center", lineHeight: 20, marginBottom: 32 },
   primaryBtn: { width: "100%", maxWidth: 320, paddingVertical: 4 },
   primaryBtnLabel: { fontSize: 16, letterSpacing: 0.3 },
+  mockBtn: { width: "100%", maxWidth: 320, marginTop: 16 },
 });
