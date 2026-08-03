@@ -97,11 +97,13 @@ export default function LinkManagerScreen() {
           </View>
         ) : (
           <View style={[styles.emptyCard, { backgroundColor: theme.colors.surfaceVariant }]}>
-            <LogoMark compact />
-            <Text variant="titleLarge" style={styles.emptyTitle}>还没有 ZCode 链接</Text>
-            <Text variant="bodyMedium" style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>扫描桌面端二维码，或手动粘贴远程链接后开始管理。</Text>
-            <Button mode="contained" icon="qrcode-scan" onPress={() => router.push("/scan")}>添加第一个链接</Button>
-            {isMockEnabled ? <Button mode="text" icon="flask-outline" onPress={addMockSession} style={styles.mockButton}>载入开发 Mock</Button> : null}
+            <View style={styles.emptyInner}>
+              <LogoMark compact />
+              <Text variant="titleLarge" style={styles.emptyTitle}>还没有 ZCode 链接</Text>
+              <Text variant="bodyMedium" style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>扫描桌面端二维码，或手动粘贴远程链接后开始管理。</Text>
+              <Button mode="contained" icon="qrcode-scan" onPress={() => router.push("/scan")}>添加第一个链接</Button>
+              {isMockEnabled ? <Button mode="text" icon="flask-outline" onPress={addMockSession} style={styles.mockButton}>载入开发 Mock</Button> : null}
+            </View>
           </View>
         )}
 
@@ -174,15 +176,15 @@ function displayUrl(value: string) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { padding: 20, paddingBottom: 118 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 28 },
+  content: { padding: 20, paddingBottom: 96, flexGrow: 1 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
   brandGroup: { flexDirection: "row", alignItems: "center", gap: 14 },
   logo: { width: 64, height: 64, borderRadius: 18, backgroundColor: "#17181B", justifyContent: "center", alignItems: "center" },
   logoCompact: { width: 38, height: 38, borderRadius: 11 },
   logoText: { color: "#FFFFFF", fontSize: 32, fontWeight: "500", lineHeight: 38 },
   logoTextCompact: { fontSize: 19, lineHeight: 24 },
   heading: { fontWeight: "800" },
-  search: { backgroundColor: "transparent", marginBottom: 24 },
+  search: { backgroundColor: "transparent", marginBottom: 16 },
   searchOutline: { borderRadius: 28 },
   currentCard: { borderWidth: 1, borderRadius: 8, padding: 20 },
   currentName: { fontWeight: "800", marginTop: 6 },
@@ -190,11 +192,12 @@ const styles = StyleSheet.create({
   currentActions: { flexDirection: "row", gap: 10, marginTop: 20 },
   flexButton: { flex: 1 },
   buttonContent: { minHeight: 44 },
-  emptyCard: { alignItems: "center", padding: 28, borderRadius: 8 },
+  emptyCard: { flex: 1, borderRadius: 8, padding: 24, justifyContent: "center" },
+  emptyInner: { alignItems: "center" },
   emptyTitle: { fontWeight: "800", marginTop: 16 },
   emptyText: { textAlign: "center", lineHeight: 20, marginTop: 8, marginBottom: 20 },
   mockButton: { marginTop: 8 },
-  sectionTitle: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 32, marginBottom: 12, paddingHorizontal: 2 },
+  sectionTitle: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 28, marginBottom: 12, paddingHorizontal: 2 },
   sectionHeading: { fontWeight: "800" },
   list: { borderWidth: 1, borderRadius: 8, overflow: "hidden" },
   linkRow: { flexDirection: "row", alignItems: "center", paddingLeft: 14, paddingVertical: 10, paddingRight: 2 },
