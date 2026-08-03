@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Button, Divider, IconButton, Text, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -9,6 +8,7 @@ import type { Session } from "../src/lib/types";
 import { makeId } from "../src/lib/id";
 import { isMockEnabled, mockRemote } from "../src/lib/mockConfig";
 import { useAppStore } from "../src/store/appStore";
+import { BottomNav } from "../src/components/BottomNav";
 
 /** 链接管理首页：链接列表优先，远端工作台作为明确进入的二级页面。 */
 export default function LinkManagerScreen() {
@@ -67,7 +67,7 @@ export default function LinkManagerScreen() {
               <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>管理 HTTPS 链接</Text>
             </View>
           </View>
-          <IconButton icon="cog-outline" size={23} onPress={() => router.push("/settings")} accessibilityLabel="系统设置" />
+          <IconButton icon="plus" size={24} onPress={() => router.push("/scan")} accessibilityLabel="添加链接" />
         </View>
 
         <TextInput
@@ -122,14 +122,7 @@ export default function LinkManagerScreen() {
         ) : null}
       </ScrollView>
 
-      <Pressable style={[styles.fab, { backgroundColor: theme.colors.primary }]} onPress={() => router.push("/scan")} accessibilityRole="button" accessibilityLabel="添加链接">
-        <MaterialCommunityIcons name="plus" size={30} color={theme.colors.onPrimary} />
-      </Pressable>
-      <View style={[styles.navigation, { borderTopColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}>
-        <NavItem active icon="link-variant" label="链接" onPress={() => undefined} />
-        <NavItem icon="monitor-dashboard" label="工作台" onPress={openWorkspace} />
-        <NavItem icon="cog-outline" label="设置" onPress={() => router.push("/settings")} />
-      </View>
+      <BottomNav active="links" onOpenWorkspace={openWorkspace} />
     </SafeAreaView>
   );
 }
@@ -160,11 +153,6 @@ function LinkRow({ session, active, onActivate, onDelete }: { session: Session; 
   );
 }
 
-function NavItem({ active = false, icon, label, onPress }: { active?: boolean; icon: string; label: string; onPress: () => void }) {
-  const theme = useTheme();
-  return <Pressable onPress={onPress} style={[styles.navItem, active && { backgroundColor: theme.colors.surfaceVariant }]} accessibilityRole="tab" accessibilityState={{ selected: active }}><MaterialCommunityIcons name={icon as never} size={20} color={active ? theme.colors.onSurface : theme.colors.onSurfaceVariant} /><Text variant="labelMedium" style={{ color: active ? theme.colors.onSurface : theme.colors.onSurfaceVariant }}>{label}</Text></Pressable>;
-}
-
 function displayUrl(value: string) {
   try {
     const url = new URL(value);
@@ -176,7 +164,7 @@ function displayUrl(value: string) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { padding: 20, paddingBottom: 96, flexGrow: 1 },
+  content: { padding: 20, paddingBottom: 24, flexGrow: 1 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
   brandGroup: { flexDirection: "row", alignItems: "center", gap: 14 },
   logo: { width: 64, height: 64, borderRadius: 18, backgroundColor: "#17181B", justifyContent: "center", alignItems: "center" },
@@ -206,7 +194,4 @@ const styles = StyleSheet.create({
   linkName: { flexShrink: 1, fontWeight: "700" },
   activePill: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   noResult: { padding: 20, textAlign: "center" },
-  fab: { position: "absolute", right: 24, bottom: 92, width: 60, height: 60, borderRadius: 18, justifyContent: "center", alignItems: "center", elevation: 5 },
-  navigation: { height: 76, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", paddingHorizontal: 20, gap: 12, paddingVertical: 10 },
-  navItem: { flex: 1, alignItems: "center", justifyContent: "center", gap: 3, borderRadius: 8 },
 });

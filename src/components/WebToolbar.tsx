@@ -14,7 +14,6 @@ export interface WebToolbarHandle {
 }
 
 interface Props {
-  title: string;
   canGoBack: boolean;
   canGoForward: boolean;
   /** 注入 JS 到当前 WebView。 */
@@ -24,7 +23,6 @@ interface Props {
   onForward: () => void;
   onShare: () => void;
   onHome: () => void;
-  onOpenSettings: () => void;
 }
 
 const REFRESH_HINT: Record<RefreshMessage["result"], string> = {
@@ -43,7 +41,7 @@ const REFRESH_HINT: Record<RefreshMessage["result"], string> = {
  * 并在 not-found/error 时触发整页 reload 兜底。
  */
 export const WebToolbar = forwardRef<WebToolbarHandle, Props>(function WebToolbar(
-  { title, canGoBack, canGoForward, onInject, onReload, onBack, onForward, onShare, onHome, onOpenSettings },
+  { canGoBack, canGoForward, onInject, onReload, onBack, onForward, onShare, onHome },
   ref,
 ) {
   const theme = useTheme();
@@ -85,9 +83,6 @@ export const WebToolbar = forwardRef<WebToolbarHandle, Props>(function WebToolba
           )}
           accessibilityLabel="后退"
         />
-        <Text variant="titleMedium" numberOfLines={1} style={styles.title}>
-          {title}
-        </Text>
         <View style={styles.right}>
           <IconButton
             onPress={() => onInject(ZCODE_REFRESH_JS)}
@@ -104,7 +99,6 @@ export const WebToolbar = forwardRef<WebToolbarHandle, Props>(function WebToolba
             <Menu.Item leadingIcon="arrow-right" title="前进" disabled={!canGoForward} onPress={() => { setMenuVisible(false); onForward(); }} />
             <Menu.Item leadingIcon="home-outline" title="回到链接管理" onPress={() => { setMenuVisible(false); onHome(); }} />
             <Menu.Item leadingIcon="share-variant-outline" title="分享当前链接" onPress={() => { setMenuVisible(false); onShare(); }} />
-            <Menu.Item leadingIcon="cog-outline" title="系统设置" onPress={() => { setMenuVisible(false); onOpenSettings(); }} />
           </Menu>
         </View>
       </View>
@@ -137,7 +131,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "rgba(150,160,170,0.3)",
   },
-  row: { flexDirection: "row", alignItems: "center", paddingRight: 4, height: 56 },
-  title: { flex: 1, minWidth: 0, marginLeft: 4, fontWeight: "700" },
+  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingRight: 4, height: 48 },
   right: { flexDirection: "row", alignItems: "center" },
 });

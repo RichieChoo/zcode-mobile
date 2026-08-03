@@ -4,19 +4,20 @@ import { Share, StyleSheet, View } from "react-native";
 import { WebView, type WebViewMessageEvent, type WebViewNavigation } from "react-native-webview";
 
 import { WebToolbar, dispatchRefreshMessage } from "../src/components/WebToolbar";
+import { BottomNav } from "../src/components/BottomNav";
 import { selectActiveSession, useAppStore } from "../src/store/appStore";
 import type { RefreshMessage } from "../src/lib/zcodeRefresh";
 
-/** 当前链接的远端工作台，保留既有 WebView 行为，只将入口从链接管理页显式打开。 */
+/** 当前链接的远端工作台；顶部精简工具栏 + 底部共享导航。 */
 export default function RemoteScreen() {
   const session = useAppStore(selectActiveSession);
   if (!session) {
     return <Redirect href="/" />;
   }
-  return <ZCodeWebView key={session.id} url={session.url} title={session.name} />;
+  return <ZCodeWebView key={session.id} url={session.url} />;
 }
 
-function ZCodeWebView({ url, title }: { url: string; title: string }) {
+function ZCodeWebView({ url }: { url: string }) {
   const webRef = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = React.useState(false);
   const [canGoForward, setCanGoForward] = React.useState(false);
@@ -40,7 +41,6 @@ function ZCodeWebView({ url, title }: { url: string; title: string }) {
 
   return <View style={styles.flex}>
     <WebToolbar
-      title={title}
       canGoBack={canGoBack}
       canGoForward={canGoForward}
       onInject={(script) => webRef.current?.injectJavaScript(script)}
@@ -49,7 +49,6 @@ function ZCodeWebView({ url, title }: { url: string; title: string }) {
       onForward={() => webRef.current?.goForward()}
       onHome={() => router.replace("/")}
       onShare={onShare}
-      onOpenSettings={() => router.push("/settings")}
     />
     <WebView
       ref={webRef}
@@ -67,6 +66,7 @@ function ZCodeWebView({ url, title }: { url: string; title: string }) {
       userAgent="ZCodeMobile/1.0 (Android; WebView)"
       style={styles.flex}
     />
+    <BottomNav active="workspace" onOpenWorkspace={() => undefined} />
   </View>;
 }
 
