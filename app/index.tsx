@@ -30,8 +30,10 @@ export default function LinkManagerScreen() {
     return value.includes(query.trim().toLocaleLowerCase());
   });
 
-  const activate = (session: Session) => {
+  // 点击列表项：设为当前会话并直接进入工作台。
+  const openSession = (session: Session) => {
     void setActive(session.id);
+    router.push("/remote");
   };
 
   const openWorkspace = () => {
@@ -114,7 +116,7 @@ export default function LinkManagerScreen() {
               {visibleSessions.length ? visibleSessions.map((session, index) => (
                 <React.Fragment key={session.id}>
                   {index > 0 ? <Divider /> : null}
-                  <LinkRow session={session} active={session.id === activeSessionId} onActivate={() => activate(session)} onDelete={() => deleteSession(session)} />
+                  <LinkRow session={session} active={session.id === activeSessionId} onActivate={() => openSession(session)} onDelete={() => deleteSession(session)} />
                 </React.Fragment>
               )) : <Text variant="bodyMedium" style={[styles.noResult, { color: theme.colors.onSurfaceVariant }]}>没有匹配的链接</Text>}
             </View>
