@@ -31,3 +31,4 @@ npm-debug.*
 .env
 .env.local
 .env.development
+.codex-build-check

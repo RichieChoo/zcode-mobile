@@ -10,6 +10,10 @@ import { useAppStore } from "../src/store/appStore";
 /**
  * App 根布局：水合持久化数据、注入主题与 Paper Provider、声明路由栈。
  * 主题 / 横竖屏 / 全屏（状态栏隐藏）由 useAppearance 统一驱动。
+ *
+ * 图标字体（@expo/vector-icons 的 MaterialCommunityIcons）由该库在组件挂载时
+ * 自行通过 expo-font 加载，无需在此预加载；前提是项目根目录存在 metro.config.js
+ * （已配置 expo 的默认资产解析）。
  */
 export default function RootLayout() {
   const hydrated = useAppStore((s) => s.hydrated);

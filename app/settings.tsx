@@ -1,88 +1,35 @@
-import React, { useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import React from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
-import {
-  Appbar,
-  Button,
-  List,
-  SegmentedButtons,
-  Switch,
-  Text,
-  useTheme,
-} from "react-native-paper";
+import { Appbar, Divider, SegmentedButtons, Switch, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { SessionCard } from "../src/components/SessionCard";
 import { useAppStore } from "../src/store/appStore";
 import type { OrientationLock, ThemeMode } from "../src/lib/types";
 
-/** 设置页：会话管理（多会话切换/删除） + 外观（主题/横竖屏/全屏）。 */
+/** 系统显示偏好；链接本身统一在首页管理。 */
 export default function SettingsScreen() {
   const theme = useTheme();
-  const sessions = useAppStore((s) => s.sessions);
-  const activeSessionId = useAppStore((s) => s.activeSessionId);
-  const setActive = useAppStore((s) => s.setActive);
-  const removeSession = useAppStore((s) => s.removeSession);
   const appearance = useAppStore((s) => s.appearance);
   const setAppearance = useAppStore((s) => s.setAppearance);
 
-  const onDelete = (id: string, name: string) => {
-    Alert.alert("删除会话", `确定删除「${name}」吗？`, [
-      { text: "取消", style: "cancel" },
-      { text: "删除", style: "destructive", onPress: () => removeSession(id) },
-    ]);
-  };
-
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.colors.background }]} edges={["top"]}>
-      <Appbar.Header>
+      <Appbar.Header style={styles.appbar}>
         <Appbar.BackAction onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} />
-        <Appbar.Content title="设置" />
+        <Appbar.Content title="系统设置" titleStyle={styles.appbarTitle} />
       </Appbar.Header>
-
       <ScrollView contentContainerStyle={styles.body}>
-        {/* 会话管理 */}
-        <List.Section>
-          <List.Subheader>会话</List.Subheader>
-          {sessions.length === 0 ? (
-            <Text variant="bodyMedium" style={[styles.empty, { color: theme.colors.onSurfaceVariant }]}>
-              还没有绑定任何 ZCode 设备
-            </Text>
-          ) : (
-            sessions.map((s) => (
-              <SessionCard
-                key={s.id}
-                session={s}
-                active={s.id === activeSessionId}
-                onPress={() => {
-                  setActive(s.id);
-                  router.replace("/");
-                }}
-                onActivate={() => setActive(s.id)}
-                onDelete={() => onDelete(s.id, s.name)}
-              />
-            ))
-          )}
-          <Button
-            mode="contained-tonal"
-            icon="qrcode-scan"
-            onPress={() => router.push("/scan")}
-            style={styles.addBtn}
-          >
-            添加新设备
-          </Button>
-        </List.Section>
+        <Text variant="headlineSmall" style={styles.heading}>外观与系统</Text>
+        <Text variant="bodyMedium" style={[styles.intro, { color: theme.colors.onSurfaceVariant }]}>这些偏好只影响 ZCode-Moblie 在本机上的显示方式。</Text>
 
-        {/* 外观：主题 */}
-        <List.Section>
-          <List.Subheader>外观</List.Subheader>
+        <View style={[styles.panel, { borderColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}>
+          <Text variant="titleSmall" style={styles.panelTitle}>显示偏好</Text>
           <View style={styles.control}>
-            <Text variant="bodyMedium" style={styles.controlLabel}>
-              主题
-            </Text>
+            <Text variant="bodyMedium" style={styles.controlLabel}>主题</Text>
             <SegmentedButtons
               value={appearance.theme}
-              onValueChange={(v) => setAppearance({ theme: v as ThemeMode })}
+              onValueChange={(value) => void setAppearance({ theme: value as ThemeMode })}
               buttons={[
                 { value: "system", label: "跟随系统" },
                 { value: "light", label: "浅色" },
@@ -90,14 +37,12 @@ export default function SettingsScreen() {
               ]}
             />
           </View>
-
+          <Divider />
           <View style={styles.control}>
-            <Text variant="bodyMedium" style={styles.controlLabel}>
-              屏幕方向
-            </Text>
+            <Text variant="bodyMedium" style={styles.controlLabel}>屏幕方向</Text>
             <SegmentedButtons
               value={appearance.orientation}
-              onValueChange={(v) => setAppearance({ orientation: v as OrientationLock })}
+              onValueChange={(value) => void setAppearance({ orientation: value as OrientationLock })}
               buttons={[
                 { value: "default", label: "自动" },
                 { value: "portrait", label: "竖屏" },
@@ -105,23 +50,16 @@ export default function SettingsScreen() {
               ]}
             />
           </View>
-
-          <List.Item
-            title="全屏（沉浸式）"
-            description="隐藏状态栏，让 ZCode 占满整屏"
-            right={(props) => (
-              <Switch
-                {...props}
-                value={appearance.fullscreen}
-                onValueChange={(v) => setAppearance({ fullscreen: v })}
-              />
-            )}
-          />
-        </List.Section>
-
-        <Text variant="labelSmall" style={[styles.footer, { color: theme.colors.onSurfaceVariant }]}>
-          ZCode Mobile · 仅作远程 Web 壳，所有任务数据仍由桌面端处理
-        </Text>
+          <Divider />
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleCopy}>
+              <Text variant="titleSmall" style={styles.listTitle}>沉浸式工作台</Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>在远端工作台中隐藏系统状态栏</Text>
+            </View>
+            <Switch value={appearance.fullscreen} onValueChange={(value) => void setAppearance({ fullscreen: value })} />
+          </View>
+        </View>
+        <Text variant="labelSmall" style={[styles.footer, { color: theme.colors.onSurfaceVariant }]}>ZCode-Moblie · 链接与显示偏好仅保存在本机</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -129,10 +67,17 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  body: { paddingVertical: 8 },
-  empty: { paddingHorizontal: 16, paddingVertical: 8 },
-  addBtn: { marginHorizontal: 16, marginVertical: 8 },
-  control: { paddingHorizontal: 16, paddingVertical: 8, gap: 8 },
-  controlLabel: { marginBottom: 4 },
-  footer: { textAlign: "center", paddingVertical: 24 },
+  appbar: { backgroundColor: "transparent" },
+  appbarTitle: { fontWeight: "700" },
+  body: { padding: 20, paddingBottom: 40 },
+  heading: { fontWeight: "800", marginTop: 8 },
+  intro: { marginTop: 6, lineHeight: 20 },
+  panel: { borderWidth: 1, borderRadius: 8, marginTop: 24, overflow: "hidden" },
+  panelTitle: { fontWeight: "700", paddingHorizontal: 16, paddingTop: 18 },
+  control: { paddingHorizontal: 16, paddingVertical: 16, gap: 10 },
+  controlLabel: { fontWeight: "600" },
+  listTitle: { fontWeight: "600" },
+  toggleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 16, padding: 16 },
+  toggleCopy: { flex: 1, gap: 3 },
+  footer: { textAlign: "center", paddingTop: 28, lineHeight: 18 },
 });

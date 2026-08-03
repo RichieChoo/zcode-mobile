@@ -1,132 +1,209 @@
-import React, { useRef } from "react";
+import React, { useMemo, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
-import { Share, StyleSheet, View } from "react-native";
-import { WebView, type WebViewMessageEvent, type WebViewNavigation } from "react-native-webview";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { Button, Divider, IconButton, Text, TextInput, useTheme } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { EmptyState } from "../src/components/EmptyState";
-import {
-  WebToolbar,
-  type WebToolbarHandle,
-  dispatchRefreshMessage,
-} from "../src/components/WebToolbar";
-import { selectActiveSession, useAppStore } from "../src/store/appStore";
-import { mockRemote, isMockEnabled } from "../src/lib/mockConfig";
+import type { Session } from "../src/lib/types";
 import { makeId } from "../src/lib/id";
-import type { RefreshMessage } from "../src/lib/zcodeRefresh";
+import { isMockEnabled, mockRemote } from "../src/lib/mockConfig";
+import { useAppStore } from "../src/store/appStore";
 
-/**
- * 首页：无会话 → 空状态引导扫码；有会话 → 用 WebView 加载 ZCode remote。
- * 顶部工具栏提供后退/前进/首页/刷新/分享/设置。
- */
-export default function HomeScreen() {
-  const session = useAppStore(selectActiveSession);
+/** 链接管理首页：链接列表优先，远端工作台作为明确进入的二级页面。 */
+export default function LinkManagerScreen() {
+  const theme = useTheme();
+  const sessions = useAppStore((s) => s.sessions);
+  const activeSessionId = useAppStore((s) => s.activeSessionId);
+  const setActive = useAppStore((s) => s.setActive);
+  const removeSession = useAppStore((s) => s.removeSession);
   const addSession = useAppStore((s) => s.addSession);
+  const [query, setQuery] = useState("");
 
-  if (!session) {
-    return (
-      <EmptyState
-        onScan={() => router.push("/scan")}
-        onManual={() => router.push({ pathname: "/scan", params: { manual: "1" } })}
-        onMock={
-          isMockEnabled && mockRemote
-            ? () => {
-                // 本地开发模式：直接用 mock 链接创建会话并进入 WebView。
-                const m = mockRemote!;
-                addSession({
-                  id: makeId(),
-                  name: m.name ?? "Mock 会话",
-                  url: m.url,
-                  boundAt: Date.now(),
-                });
-              }
-            : undefined
-        }
-      />
-    );
-  }
-  return <ZCodeWebView key={session.id} url={session.url} title={session.name} />;
-}
+  const orderedSessions = useMemo(
+    () => [...sessions].sort((a, b) => b.boundAt - a.boundAt),
+    [sessions],
+  );
+  const activeSession = sessions.find((session) => session.id === activeSessionId);
+  const visibleSessions = orderedSessions.filter((session) => {
+    const value = `${session.name} ${session.url}`.toLocaleLowerCase();
+    return value.includes(query.trim().toLocaleLowerCase());
+  });
 
-function ZCodeWebView({ url, title }: { url: string; title: string }) {
-  const webRef = useRef<WebView>(null);
-  const toolbarRef = useRef<WebToolbarHandle>(null);
-  const [canGoBack, setCanGoBack] = React.useState(false);
-  const [canGoForward, setCanGoForward] = React.useState(false);
-  const homeUrlRef = useRef(url);
-
-  const inject = (js: string) => webRef.current?.injectJavaScript(js);
-  const reload = () => webRef.current?.reload();
-
-  const onMessage = (e: WebViewMessageEvent) => {
-    try {
-      const data = JSON.parse(e.nativeEvent.data) as RefreshMessage;
-      if (data?.kind === "refresh") dispatchRefreshMessage(data);
-    } catch {
-      /* 忽略非刷新消息 */
-    }
+  const activate = (session: Session) => {
+    void setActive(session.id);
   };
 
-  const onNavStateChange = (nav: WebViewNavigation) => {
-    setCanGoBack(nav.canGoBack);
-    setCanGoForward(nav.canGoForward);
+  const openWorkspace = () => {
+    if (activeSession) router.push("/remote");
+    else router.push("/scan");
   };
 
-  // 诊断日志：确认 WebView 加载链路（URL、加载结果、错误）。开发期保留。
-  const onLoadStart = (e: { nativeEvent: { url: string } }) => {
-    console.log("[WebView] loadStart:", e.nativeEvent.url);
-  };
-  const onLoadEnd = (e: { nativeEvent: { url: string } }) => {
-    console.log("[WebView] loadEnd:", e.nativeEvent.url);
-  };
-  const onWebError = (e: { nativeEvent: { url: string; description: string; code?: number } }) => {
-    console.log("[WebView] loadError:", e.nativeEvent.url, e.nativeEvent.description, e.nativeEvent.code);
+  const deleteSession = (session: Session) => {
+    Alert.alert("移除链接", `确定移除「${session.name}」吗？`, [
+      { text: "取消", style: "cancel" },
+      { text: "移除", style: "destructive", onPress: () => void removeSession(session.id) },
+    ]);
   };
 
-  const onShare = async () => {
-    try {
-      await Share.share({ message: url, url });
-    } catch {
-      /* 用户取消等，忽略 */
-    }
+  const addMockSession = () => {
+    if (!mockRemote) return;
+    void addSession({
+      id: makeId(),
+      name: mockRemote.name ?? "Mock ZCode",
+      url: mockRemote.url,
+      boundAt: Date.now(),
+    });
   };
 
   return (
-    <View style={styles.flex}>
-      <WebToolbar
-        ref={toolbarRef}
-        title={title}
-        canGoBack={canGoBack}
-        canGoForward={canGoForward}
-        onInject={inject}
-        onReload={reload}
-        onBack={() => webRef.current?.goBack()}
-        onForward={() => webRef.current?.goForward()}
-        onHome={() => webRef.current?.injectJavaScript(`(function(){location.href=${JSON.stringify(homeUrlRef.current)};})();true;`)}
-        onShare={onShare}
-        onOpenSettings={() => router.push("/settings")}
-      />
-      <WebView
-        ref={webRef}
-        source={{ uri: url }}
-        onMessage={onMessage}
-        onNavigationStateChange={onNavStateChange}
-        onLoadStart={onLoadStart}
-        onLoadEnd={onLoadEnd}
-        onError={onWebError}
-        onHttpError={onWebError}
-        javaScriptEnabled
-        domStorageEnabled
-        startInLoadingState
-        allowsBackForwardNavigationGestures
-        sharedCookiesEnabled
-        // 让 zcode 知道这是个移动端 WebView，便于它下发移动端 UI。
-        userAgent="ZCodeMobile/1.0 (Android; WebView)"
-        style={styles.flex}
-      />
-    </View>
+    <SafeAreaView style={[styles.root, { backgroundColor: theme.colors.background }]} edges={["top", "bottom"]}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.header}>
+          <View style={styles.brandGroup}>
+            <LogoMark />
+            <View>
+              <Text variant="headlineSmall" style={styles.heading}>ZCode 管理器</Text>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>管理 HTTPS 链接</Text>
+            </View>
+          </View>
+          <IconButton icon="cog-outline" size={23} onPress={() => router.push("/settings")} accessibilityLabel="系统设置" />
+        </View>
+
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          mode="outlined"
+          placeholder="搜索或粘贴 ZCode 链接"
+          left={<TextInput.Icon icon="magnify" />}
+          right={query ? <TextInput.Icon icon="close" onPress={() => setQuery("")} /> : undefined}
+          outlineStyle={styles.searchOutline}
+          style={styles.search}
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="go"
+          onSubmitEditing={() => router.push({ pathname: "/scan", params: { manual: "1" } })}
+        />
+
+        {activeSession ? (
+          <View style={[styles.currentCard, { borderColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}>
+            <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>当前使用</Text>
+            <Text variant="titleLarge" numberOfLines={1} style={styles.currentName}>{activeSession.name}</Text>
+            <Text variant="bodyMedium" numberOfLines={1} style={[styles.url, { color: theme.colors.onSurfaceVariant }]}>{displayUrl(activeSession.url)}</Text>
+            <View style={styles.currentActions}>
+              <Button mode="contained" icon="open-in-new" contentStyle={styles.buttonContent} style={styles.flexButton} onPress={openWorkspace}>打开工作台</Button>
+              <Button mode="outlined" contentStyle={styles.buttonContent} style={styles.flexButton} onPress={() => router.push("/scan")}>添加链接</Button>
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.emptyCard, { backgroundColor: theme.colors.surfaceVariant }]}>
+            <LogoMark compact />
+            <Text variant="titleLarge" style={styles.emptyTitle}>还没有 ZCode 链接</Text>
+            <Text variant="bodyMedium" style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>扫描桌面端二维码，或手动粘贴远程链接后开始管理。</Text>
+            <Button mode="contained" icon="qrcode-scan" onPress={() => router.push("/scan")}>添加第一个链接</Button>
+            {isMockEnabled ? <Button mode="text" icon="flask-outline" onPress={addMockSession} style={styles.mockButton}>载入开发 Mock</Button> : null}
+          </View>
+        )}
+
+        {sessions.length > 0 ? (
+          <>
+            <SectionTitle title="全部链接" count={visibleSessions.length} />
+            <View style={[styles.list, { borderColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}>
+              {visibleSessions.length ? visibleSessions.map((session, index) => (
+                <React.Fragment key={session.id}>
+                  {index > 0 ? <Divider /> : null}
+                  <LinkRow session={session} active={session.id === activeSessionId} onActivate={() => activate(session)} onDelete={() => deleteSession(session)} />
+                </React.Fragment>
+              )) : <Text variant="bodyMedium" style={[styles.noResult, { color: theme.colors.onSurfaceVariant }]}>没有匹配的链接</Text>}
+            </View>
+          </>
+        ) : null}
+      </ScrollView>
+
+      <Pressable style={[styles.fab, { backgroundColor: theme.colors.primary }]} onPress={() => router.push("/scan")} accessibilityRole="button" accessibilityLabel="添加链接">
+        <MaterialCommunityIcons name="plus" size={30} color={theme.colors.onPrimary} />
+      </Pressable>
+      <View style={[styles.navigation, { borderTopColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}>
+        <NavItem active icon="link-variant" label="链接" onPress={() => undefined} />
+        <NavItem icon="monitor-dashboard" label="工作台" onPress={openWorkspace} />
+        <NavItem icon="cog-outline" label="设置" onPress={() => router.push("/settings")} />
+      </View>
+    </SafeAreaView>
   );
 }
 
+function LogoMark({ compact = false }: { compact?: boolean }) {
+  return <View style={[styles.logo, compact && styles.logoCompact]}><Text style={[styles.logoText, compact && styles.logoTextCompact]}>Z</Text></View>;
+}
+
+function SectionTitle({ title, count }: { title: string; count: number }) {
+  const theme = useTheme();
+  return <View style={styles.sectionTitle}><Text variant="headlineSmall" style={styles.sectionHeading}>{title}</Text><Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>{count} 条</Text></View>;
+}
+
+function LinkRow({ session, active, onActivate, onDelete }: { session: Session; active: boolean; onActivate: () => void; onDelete: () => void }) {
+  const theme = useTheme();
+  return (
+    <Pressable onPress={onActivate} style={({ pressed }) => [styles.linkRow, pressed && { backgroundColor: theme.colors.surfaceVariant }]} accessibilityRole="button" accessibilityLabel={`使用链接 ${session.name}`}>
+      <LogoMark compact />
+      <View style={styles.linkDetails}>
+        <View style={styles.linkNameRow}>
+          <Text variant="titleSmall" numberOfLines={1} style={styles.linkName}>{session.name}</Text>
+          {active ? <View style={[styles.activePill, { backgroundColor: theme.colors.primaryContainer }]}><Text variant="labelSmall" style={{ color: theme.colors.onPrimaryContainer }}>当前</Text></View> : null}
+        </View>
+        <Text variant="bodySmall" numberOfLines={1} style={{ color: theme.colors.onSurfaceVariant }}>{displayUrl(session.url)}</Text>
+      </View>
+      <IconButton icon="trash-can-outline" size={20} iconColor={theme.colors.onSurfaceVariant} onPress={onDelete} accessibilityLabel={`移除 ${session.name}`} />
+    </Pressable>
+  );
+}
+
+function NavItem({ active = false, icon, label, onPress }: { active?: boolean; icon: string; label: string; onPress: () => void }) {
+  const theme = useTheme();
+  return <Pressable onPress={onPress} style={[styles.navItem, active && { backgroundColor: theme.colors.surfaceVariant }]} accessibilityRole="tab" accessibilityState={{ selected: active }}><MaterialCommunityIcons name={icon as never} size={20} color={active ? theme.colors.onSurface : theme.colors.onSurfaceVariant} /><Text variant="labelMedium" style={{ color: active ? theme.colors.onSurface : theme.colors.onSurfaceVariant }}>{label}</Text></Pressable>;
+}
+
+function displayUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return `${url.host}${url.pathname === "/" ? "" : url.pathname}`;
+  } catch {
+    return value;
+  }
+}
+
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  root: { flex: 1 },
+  content: { padding: 20, paddingBottom: 118 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 28 },
+  brandGroup: { flexDirection: "row", alignItems: "center", gap: 14 },
+  logo: { width: 64, height: 64, borderRadius: 18, backgroundColor: "#17181B", justifyContent: "center", alignItems: "center" },
+  logoCompact: { width: 38, height: 38, borderRadius: 11 },
+  logoText: { color: "#FFFFFF", fontSize: 32, fontWeight: "500", lineHeight: 38 },
+  logoTextCompact: { fontSize: 19, lineHeight: 24 },
+  heading: { fontWeight: "800" },
+  search: { backgroundColor: "transparent", marginBottom: 24 },
+  searchOutline: { borderRadius: 28 },
+  currentCard: { borderWidth: 1, borderRadius: 8, padding: 20 },
+  currentName: { fontWeight: "800", marginTop: 6 },
+  url: { fontFamily: "monospace", marginTop: 4 },
+  currentActions: { flexDirection: "row", gap: 10, marginTop: 20 },
+  flexButton: { flex: 1 },
+  buttonContent: { minHeight: 44 },
+  emptyCard: { alignItems: "center", padding: 28, borderRadius: 8 },
+  emptyTitle: { fontWeight: "800", marginTop: 16 },
+  emptyText: { textAlign: "center", lineHeight: 20, marginTop: 8, marginBottom: 20 },
+  mockButton: { marginTop: 8 },
+  sectionTitle: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 32, marginBottom: 12, paddingHorizontal: 2 },
+  sectionHeading: { fontWeight: "800" },
+  list: { borderWidth: 1, borderRadius: 8, overflow: "hidden" },
+  linkRow: { flexDirection: "row", alignItems: "center", paddingLeft: 14, paddingVertical: 10, paddingRight: 2 },
+  linkDetails: { flex: 1, minWidth: 0, marginLeft: 12 },
+  linkNameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  linkName: { flexShrink: 1, fontWeight: "700" },
+  activePill: { borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
+  noResult: { padding: 20, textAlign: "center" },
+  fab: { position: "absolute", right: 24, bottom: 92, width: 60, height: 60, borderRadius: 18, justifyContent: "center", alignItems: "center", elevation: 5 },
+  navigation: { height: 76, borderTopWidth: StyleSheet.hairlineWidth, flexDirection: "row", paddingHorizontal: 20, gap: 12, paddingVertical: 10 },
+  navItem: { flex: 1, alignItems: "center", justifyContent: "center", gap: 3, borderRadius: 8 },
 });

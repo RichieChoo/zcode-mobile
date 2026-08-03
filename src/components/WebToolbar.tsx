@@ -1,6 +1,6 @@
-import React, { forwardRef, useImperativeHandle, useRef } from "react";
+import React, { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { IconButton, Snackbar, Text, useTheme } from "react-native-paper";
+import { IconButton, Menu, Snackbar, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
@@ -48,6 +48,7 @@ export const WebToolbar = forwardRef<WebToolbarHandle, Props>(function WebToolba
 ) {
   const theme = useTheme();
   const [toast, setToast] = React.useState<string | null>(null);
+  const [menuVisible, setMenuVisible] = useState(false);
   const onReloadRef = useRef(onReload);
   onReloadRef.current = onReload;
 
@@ -89,41 +90,22 @@ export const WebToolbar = forwardRef<WebToolbarHandle, Props>(function WebToolba
         </Text>
         <View style={styles.right}>
           <IconButton
-            disabled={!canGoForward}
-            onPress={onForward}
-            icon={({ size, color }) => (
-              <MaterialCommunityIcons name="arrow-right" size={size} color={color} />
-            )}
-            accessibilityLabel="前进"
-          />
-          <IconButton
-            onPress={onHome}
-            icon={({ size, color }) => (
-              <MaterialCommunityIcons name="home-outline" size={size} color={color} />
-            )}
-            accessibilityLabel="回到首页"
-          />
-          <IconButton
             onPress={() => onInject(ZCODE_REFRESH_JS)}
             icon={({ size, color }) => (
               <MaterialCommunityIcons name="refresh" size={size} color={theme.colors.primary} />
             )}
             accessibilityLabel="刷新工作区与任务"
           />
-          <IconButton
-            onPress={onShare}
-            icon={({ size, color }) => (
-              <MaterialCommunityIcons name="share-variant-outline" size={size} color={color} />
-            )}
-            accessibilityLabel="分享链接"
-          />
-          <IconButton
-            onPress={onOpenSettings}
-            icon={({ size, color }) => (
-              <MaterialCommunityIcons name="cog-outline" size={size} color={color} />
-            )}
-            accessibilityLabel="设置"
-          />
+          <Menu
+            visible={menuVisible}
+            onDismiss={() => setMenuVisible(false)}
+            anchor={<IconButton icon="dots-horizontal" onPress={() => setMenuVisible(true)} accessibilityLabel="更多操作" />}
+          >
+            <Menu.Item leadingIcon="arrow-right" title="前进" disabled={!canGoForward} onPress={() => { setMenuVisible(false); onForward(); }} />
+            <Menu.Item leadingIcon="home-outline" title="回到链接管理" onPress={() => { setMenuVisible(false); onHome(); }} />
+            <Menu.Item leadingIcon="share-variant-outline" title="分享当前链接" onPress={() => { setMenuVisible(false); onShare(); }} />
+            <Menu.Item leadingIcon="cog-outline" title="系统设置" onPress={() => { setMenuVisible(false); onOpenSettings(); }} />
+          </Menu>
         </View>
       </View>
       <Snackbar
@@ -156,6 +138,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "rgba(150,160,170,0.3)",
   },
   row: { flexDirection: "row", alignItems: "center", paddingRight: 4, height: 56 },
-  title: { flex: 1, marginLeft: 4, fontWeight: "600" },
+  title: { flex: 1, minWidth: 0, marginLeft: 4, fontWeight: "700" },
   right: { flexDirection: "row", alignItems: "center" },
 });

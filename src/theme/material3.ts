@@ -4,25 +4,24 @@ import type { MD3Theme } from "react-native-paper";
 /**
  * Material You（Material 3）配色。
  *
- * 以 ZCode 品牌的青蓝为主色调，配以中性深色背景；同时提供深浅两套，
+ * 以明确的蓝色操作色配以黑白中性层级；同时提供深浅两套，
  * 交给 react-native-paper 的 Provider 切换。
  */
 
 const brand = {
-  // 主色：ZCode 标志性的青蓝
-  primary: "#1FB6A6",
-  primaryDark: "#0E9E8F",
-  onPrimary: "#003831",
+  primary: "#326CE5",
+  primaryDark: "#2554BA",
+  onPrimary: "#FFFFFF",
   // 强调 / 次要
-  secondary: "#5AC8B8",
-  tertiary: "#7FD1C4",
+  secondary: "#596171",
+  tertiary: "#DCE7FF",
   // 背景层级
   surface: "#FFFFFF",
-  surfaceDark: "#0B0F14",
-  surfaceVariant: "#F1F5F9",
+  surfaceDark: "#111214",
+  surfaceVariant: "#F4F4F6",
   // 文字
-  onSurface: "#0B0F14",
-  onSurfaceDark: "#E6EDF3",
+  onSurface: "#1C1C20",
+  onSurfaceDark: "#F2F2F5",
   // 错误
   error: "#EF4444",
 };
@@ -42,8 +41,8 @@ export const lightTheme: MD3Theme = {
     surface: brand.surface,
     surfaceVariant: brand.surfaceVariant,
     onSurface: brand.onSurface,
-    onSurfaceVariant: "#475569",
-    outline: "#CBD5E1",
+    onSurfaceVariant: "#6B6C75",
+    outline: "#D1D2D8",
     error: brand.error,
   },
 };
@@ -55,16 +54,16 @@ export const darkTheme: MD3Theme = {
     ...MD3DarkTheme.colors,
     primary: brand.secondary,
     primaryContainer: brand.primaryDark,
-    onPrimary: "#021F1B",
-    onPrimaryContainer: "#B6F1E8",
+    onPrimary: "#FFFFFF",
+    onPrimaryContainer: "#DCE7FF",
     secondary: brand.tertiary,
     secondaryContainer: brand.primaryDark,
     background: brand.surfaceDark,
     surface: brand.surfaceDark,
     surfaceVariant: "#141B22",
     onSurface: brand.onSurfaceDark,
-    onSurfaceVariant: "#9FB3C0",
-    outline: "#2A3440",
+    onSurfaceVariant: "#B4B5BC",
+    outline: "#3C3D44",
     error: "#FCA5A5",
   },
 };

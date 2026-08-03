@@ -1,8 +1,6 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { IconButton, Text, TouchableRipple, useTheme } from "react-native-paper";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-
 import type { Session } from "../lib/types";
 
 interface Props {

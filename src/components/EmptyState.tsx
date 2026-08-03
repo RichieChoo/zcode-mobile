@@ -7,14 +7,12 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 interface Props {
   /** 点击「扫码绑定」主按钮。 */
   onScan: () => void;
-  /** 点击「手动输入 URL」次按钮（可选）。 */
-  onManual?: () => void;
   /** 点击「Mock 链接」按钮（本地开发模式，可选）。 */
   onMock?: () => void;
 }
 
 /** 首启动空状态：引导用户扫码绑定桌面端 ZCode；开发模式下额外提供 Mock 入口。 */
-export function EmptyState({ onScan, onManual, onMock }: Props) {
+export function EmptyState({ onScan, onMock }: Props) {
   const theme = useTheme();
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: theme.colors.background }]}>
@@ -40,12 +38,6 @@ export function EmptyState({ onScan, onManual, onMock }: Props) {
         >
           扫码绑定
         </Button>
-
-        {onManual ? (
-          <Button mode="text" onPress={onManual} textColor={theme.colors.onSurfaceVariant}>
-            手动输入链接
-          </Button>
-        ) : null}
 
         {onMock ? (
           <Button

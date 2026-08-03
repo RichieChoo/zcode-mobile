@@ -1,26 +1,26 @@
 {
   "expo": {
-    "name": "ZCode",
+    "name": "ZCode-Moblie",
     "slug": "zcode-mobile",
     "version": "0.1.0",
     "orientation": "default",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/zcode-icon.png",
     "scheme": "zcode",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "backgroundColor": "#0B0F14",
+      "backgroundColor": "#17181B",
       "resizeMode": "contain",
-      "image": "./assets/splash-icon.png"
+      "image": "./assets/zcode-splash.png"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "ai.z.zcode.mobile",
-      "icon": "./assets/icon.png",
+      "icon": "./assets/zcode-icon.png",
       "splash": {
-        "backgroundColor": "#0B0F14",
+        "backgroundColor": "#17181B",
         "resizeMode": "contain",
-        "image": "./assets/splash-icon.png"
+        "image": "./assets/zcode-splash.png"
       },
       "infoPlist": {
         "NSCameraUsageDescription": "ZCode 需要使用相机扫描桌面端生成的二维码以建立远程连接。",
@@ -35,8 +35,8 @@
     "android": {
       "package": "ai.z.zcode.mobile",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0B0F14"
+        "foregroundImage": "./assets/zcode-adaptive.png",
+        "backgroundColor": "#17181B"
       },
       "permissions": [
         "android.permission.CAMERA",
@@ -48,7 +48,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/zcode-favicon.png"
     },
     "plugins": [
       "expo-router",
